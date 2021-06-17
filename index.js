@@ -29,7 +29,7 @@ const cleanCssJanusComments = (rule) => {
   });
 };
 
-module.exports = postcss.plugin('postcss-janus', (options = {}) => async (css) => {
+module.exports = postcss.plugin('postcss-cssjanus', (options = {}) => async (css) => {
   const { 
     transformDirInUrl = false, 
     transformEdgeInUrl = false 
