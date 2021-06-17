@@ -42,9 +42,8 @@ const plugins = {
 
 if (process.env.rtl === '1') {
   plugins['postcss-cssjanus'] = {
-    'prefixes': '',
-    'swapLtrRtlInUrl': false,
-    'swapLeftRightInUrl': false
+    'transformDirInUrl': false,
+    'transformEdgeInUrl': false
   }
 }
 
