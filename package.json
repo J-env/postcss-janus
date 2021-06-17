@@ -1,6 +1,6 @@
 {
-  "name": "postcss-janus",
-  "version": "1.0.2",
+  "name": "postcss-cssjanus",
+  "version": "1.0.3",
   "description": "PostCSS plugin plugin to create RTL rules using CSSJanus",
   "keywords": [
     "postcss",
@@ -8,25 +8,22 @@
     "postcss-plugin",
     "rtl",
     "postcss-janus",
+    "postcss-cssjanus",
     "cssjanus"
   ],
   "scripts": {
-    "test": "jest && eslint ."
+    "test": "jest"
   },
   "author": "Ivan Pereira <elchininet@gmail.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/elchininet/postcss-janus"
+    "url": "git+https://github.com/J-env/postcss-janus"
   },
-  "dependencies": {
-    "cssjanus": "^1.3.2",
-    "postcss": "^7.0.27"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "eslint": "^6.8.0",
-    "eslint-plugin-jest": "^23.8.2",
-    "eslint-plugin-unicorn": "^18.0.1",
+    "cssjanus": "^2.1.0",
+    "postcss": "^7.0.27",
     "jest": "^25.3.0"
   },
   "engines": {

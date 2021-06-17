@@ -3,11 +3,11 @@ const cssjanus = require('cssjanus');
 
 const commentRules = {
   noflip: '@noflip',
-  swapLtrRtlInUrl: '@swapLtrRtlInUrl',
-  swapLeftRightInUrl: '@swapLeftRightInUrl'
+  transformDirInUrl: '@transformDirInUrl',
+  transformEdgeInUrl: '@transformEdgeInUrl'
 };
 
-const regLeftRight = /(left|right)/;
+// const regLeftRight = /(left|right)/;
 const regJanusComments = new RegExp(`(${Object.values(commentRules).join('|')})`);
 
 const checkPreviousComment = (node, comment) => {
@@ -30,20 +30,21 @@ const cleanCssJanusComments = (rule) => {
 };
 
 module.exports = postcss.plugin('postcss-janus', (options = {}) => async (css) => {
-
-  const { prefixes = '.rtl', swapLtrRtlInUrl = false, swapLeftRightInUrl = false } = options;
+  const { 
+    transformDirInUrl = false, 
+    transformEdgeInUrl = false 
+  } = options;
   
   await css.walkRules(async rule => {
-    
     if ( !checkPreviousComment(rule, commentRules.noflip) ) {
-      
       const ruleStr = rule.toString();
-      const ruleStrRtl = await cssjanus.transform(ruleStr, swapLtrRtlInUrl, swapLeftRightInUrl);
+      const ruleStrRtl = await cssjanus.transform(ruleStr, transformDirInUrl, transformEdgeInUrl);
+      
       const noRtlChanges = ruleStr === ruleStrRtl;
-      const hasLtrRtlUrlDirectives = ruleStr.includes(commentRules.swapLtrRtlInUrl);
-      const hasLeftRightUrlDirectives = ruleStr.includes(commentRules.swapLeftRightInUrl);
+      const hasTransformDirInUrl = ruleStr.includes(commentRules.transformDirInUrl);
+      const hasTransformEdgeInUrl = ruleStr.includes(commentRules.transformEdgeInUrl);
 
-      if ( !noRtlChanges || hasLtrRtlUrlDirectives || hasLeftRightUrlDirectives ) {
+      if ( !noRtlChanges || hasTransformDirInUrl || hasTransformEdgeInUrl ) {
         const root = postcss.parse(ruleStrRtl);
         const ruleRtl = root.first;
 
@@ -51,60 +52,32 @@ module.exports = postcss.plugin('postcss-janus', (options = {}) => async (css) =
 
         await ruleRtl.walkDecls((decl) => {
           if (declLtrObject[decl.prop] && declLtrObject[decl.prop].value === decl.value) {
-            if (hasLtrRtlUrlDirectives || hasLeftRightUrlDirectives) {
+            if (hasTransformDirInUrl || hasTransformEdgeInUrl) {
               let urlInverted = '';
-              if (checkPreviousComment(decl, commentRules.swapLtrRtlInUrl)) {
+
+              if (checkPreviousComment(decl, commentRules.transformDirInUrl)) {
                 urlInverted = cssjanus.transform(decl.value, true);
-              } else if (checkPreviousComment(decl, commentRules.swapLeftRightInUrl)) {
+
+              } else if (checkPreviousComment(decl, commentRules.transformEdgeInUrl)) {
                 urlInverted = cssjanus.transform(decl.value, false, true);
               }
+
               if (urlInverted) {
-                if (urlInverted === decl.value) {
-                  decl.remove();
-                } else {
+                if (urlInverted !== decl.value) {
                   decl.value = urlInverted;
                 }
-              } else {
-                decl.remove();
               }
-            } else {
-              decl.remove();
-            }            
-          }
-        });
-
-        const declRtlObject = getDeclarationsObject(ruleRtl);
-        let ruleRtlDeclQuantity = 0;
-
-        ruleRtl.walkDecls((decl) => {
-          ruleRtlDeclQuantity++;
-          if (regLeftRight.test(decl.prop)) {
-            const inverse = cssjanus.transform(decl.prop);
-            if (!declRtlObject[inverse]) {
-              const unsetDecl = postcss.decl({prop: inverse, value: 'unset', important: declRtlObject[decl.prop].important});
-              decl.before(unsetDecl);
             }
           }
         });
-
+        
         cleanCssJanusComments(rule);
         cleanCssJanusComments(ruleRtl);
 
-        if (ruleRtlDeclQuantity) {          
-          ruleRtl.selectors = typeof prefixes === 'string'
-            ? ruleRtl.selectors.map((s, i) => `${i && '' || '\n'}${prefixes} ${s}`)
-            : ruleRtl.selectors.reduce((ps, s) => {
-              ps = ps.concat(prefixes.map((p, i) => `${i && '' || '\n'}${p} ${s}`));
-              return ps;
-            }, []);
-
-          rule.after(ruleRtl);
-        }        
-
+        rule.after(ruleRtl);
+        rule.remove();
       }
-
     }
-
   });
 
 });
